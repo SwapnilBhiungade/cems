@@ -178,13 +178,11 @@ print('Manifest validation passed.')
         failure {
             echo "FAILURE: Pipeline failed! Initiating rollback to previous deployment..."
             sh """
-                aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name ${EKS_CLUSTER_NAME} || true
-                kubectl rollout undo deployment/cems-deployment -n ${K8S_NAMESPACE} || true
-                kubectl rollout status deployment/cems-deployment -n ${K8S_NAMESPACE} --timeout=60s || true
+                aws eks update-kubeconfig --region ${env.AWS_DEFAULT_REGION} --name ${env.EKS_CLUSTER_NAME} || true
+                kubectl rollout undo deployment/cems-deployment -n ${env.K8S_NAMESPACE} || true
+                kubectl rollout status deployment/cems-deployment -n ${env.K8S_NAMESPACE} --timeout=60s || true
             """
         }
-        always {
-            cleanWs deleteDirs: true, notFailBuild: true
-        }
+        
     }
 }
