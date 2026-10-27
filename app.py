@@ -144,7 +144,7 @@ def request_entity_too_large(error):
 
 
 class DBWrapper:
-    """Request-scoped DB wrapper for Flask serverless and WSGI deployments."""
+    """Request-scoped DB wrapper for Flask WSGI and container deployments."""
     
     def __init__(self, cfg):
         self.cfg = cfg
@@ -922,8 +922,8 @@ def generate_entry_pass(event_id):
         # Build PDF
         doc.build(story)
         
-        # Send the PDF directly from memory. Vercel/serverless has no durable
-        # filesystem, so BytesIO is the right transport here.
+        # Send the PDF directly from memory. Cloud-native stateless pods have no durable
+        # local filesystem, so BytesIO is the right transport here.
         buffer.seek(0)
         filename = f'entry-pass-{event_id}-{registration["student_number"]}.pdf'
         return send_file(

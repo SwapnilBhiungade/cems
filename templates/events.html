@@ -724,8 +724,8 @@ function downloadEntryPass(eventId) {
     
     const downloadUrl = `/api/events/${eventId}/entry-pass`;
 
-    // Let the server decide the response type; the PDF route now returns a
-    // proper attachment directly, which is more reliable on Vercel.
+    // Let the server decide the response type; the PDF route returns a
+    // proper attachment directly, which is reliable across all environments.
     window.location.href = downloadUrl;
     
     setTimeout(() => {

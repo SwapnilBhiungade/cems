@@ -103,8 +103,7 @@ CLOUDINARY_FOLDER=cems-share/gallery
 ```
 
 If a variable is missing, the app falls back to the defaults defined in `config.py`.
-For TiDB Cloud, keep `DB_CA` pointed at the root CA certificate so the driver can verify TLS properly.
-For gallery uploads on Vercel, configure either `CLOUDINARY_URL` or the separate Cloudinary variables above so uploads, deletes, and previews use cloud storage instead of the local filesystem.
+For gallery uploads in production, configure either `CLOUDINARY_URL` or the separate Cloudinary variables above so uploads, deletes, and previews use cloud storage instead of the local filesystem.
 
 ### 5. Initialize the database
 
@@ -138,8 +137,7 @@ For online hosting, run the app through a WSGI server instead of `python app.py`
 gunicorn wsgi:app
 ```
 
-Most hosts will set `PORT` automatically. If yours does, the app will use it.
-For Vercel, the repo includes `api/index.py` and `vercel.json` so all routes are rewritten to the Flask app.
+For containerized and cloud deployments, refer to the [Implementation Guide](docs/IMPLEMENTATION_GUIDE.md) for Docker, Kubernetes (Amazon EKS), and Jenkins CI/CD instructions.
 
 Recommended production environment variables:
 

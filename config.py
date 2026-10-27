@@ -36,10 +36,7 @@ class Config:
     DEBUG = os.getenv('DEBUG', 'false').lower() in ('1', 'true', 'yes', 'on')
     PREFERRED_URL_SCHEME = 'https'
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SECURE = os.getenv(
-        'SESSION_COOKIE_SECURE',
-        'true' if os.getenv('VERCEL') else 'false'
-    ).lower() in ('1', 'true', 'yes', 'on')
+    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'false').lower() in ('1', 'true', 'yes', 'on')
     SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
     CLOUDINARY_URL = os.getenv('CLOUDINARY_URL', '')
     _CLOUDINARY_FROM_URL = _parse_cloudinary_url(CLOUDINARY_URL)
