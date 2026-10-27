@@ -1,0 +1,63 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: cems-mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: root_dev_password_only
+      MYSQL_DATABASE: campus_events
+      MYSQL_USER: cems_user
+      MYSQL_PASSWORD: cems_secure_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - cems_mysql_data:/var/lib/mysql
+      - ./scripts/init_mysql.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u cems_user --password=cems_secure_password || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - cems-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cems-app:local
+    container_name: cems-web
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SECRET_KEY: dev-insecure-secret-key-replace-in-prod
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: cems_user
+      DB_PASSWORD: cems_secure_password
+      DB_NAME: campus_events
+      ENABLE_METRICS: "true"
+      DEBUG: "false"
+      CLOUDINARY_URL: ""
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:5000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - cems-network
+
+networks:
+  cems-network:
+    driver: bridge
+
+volumes:
+  cems_mysql_data:
+    driver: local

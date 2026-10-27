@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cems
+  labels:
+    app.kubernetes.io/name: cems
+    app.kubernetes.io/part-of: campus-event-management-system
+    environment: production

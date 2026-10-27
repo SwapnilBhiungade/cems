@@ -72,6 +72,17 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
 
+# Initialize Prometheus metrics instrumentation
+try:
+    from prometheus_flask_exporter import PrometheusMetrics  # type: ignore
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+
+if PROMETHEUS_AVAILABLE and os.getenv('ENABLE_METRICS', 'true').lower() in ('1', 'true', 'yes', 'on'):
+    metrics = PrometheusMetrics(app, path='/metrics')
+    metrics.info('cems_app_info', 'Campus Event Management System Web App', version='1.0.0')
+
 
 def _configure_cloudinary():
     if not CLOUDINARY_AVAILABLE:
@@ -368,6 +379,30 @@ def admin_required(f):
     return decorated_function
 
 # Routes
+@app.route('/health')
+@app.route('/healthz')
+@csrf.exempt
+def health_check():
+    """Liveness and readiness probe endpoint for Kubernetes and AWS ALB."""
+    check_db = request.args.get('check_db', 'false').lower() in ('1', 'true', 'yes')
+    payload = {
+        'status': 'healthy',
+        'service': 'cems',
+        'timestamp': datetime.utcnow().isoformat() + 'Z'
+    }
+    if check_db:
+        try:
+            cursor = db_api.connection.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            cursor.close()
+            payload['database'] = 'connected'
+        except Exception as e:
+            payload['status'] = 'degraded'
+            payload['database'] = f'error: {str(e)}'
+            return jsonify(payload), 503
+    return jsonify(payload), 200
+
 @app.route('/')
 def home():
     cursor = db_api.connection.cursor()

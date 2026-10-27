@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cems-service-monitor
+  namespace: monitoring
+  labels:
+    release: cems-monitoring
+    app.kubernetes.io/name: cems
+spec:
+  namespaceSelector:
+    matchNames:
+      - cems
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cems
+      app.kubernetes.io/component: web
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s

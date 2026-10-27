@@ -1,0 +1,3 @@
+# Bandit configuration for CEMS
+skips: ['B101', 'B104']
+exclude_dirs: ['/venv', '/.venv', '/docs']

@@ -3,27 +3,39 @@ from config import DB_CONFIG
 import bcrypt
 from datetime import datetime, timedelta
 import sys
+import time
 
-def init_database():
+def init_database(max_retries=15, retry_delay=3):
     conn = None
     cursor = None
-    try:
-        conn_kwargs = {
-            'host': DB_CONFIG['host'],
-            'port': DB_CONFIG.get('port', 3306),
-            'user': DB_CONFIG['user'],
-            'password': DB_CONFIG['password'],
-            'database': DB_CONFIG['database'],
-        }
-        if DB_CONFIG.get('ssl_ca'):
-            conn_kwargs['ssl_ca'] = DB_CONFIG['ssl_ca']
-            conn_kwargs['ssl_verify_cert'] = DB_CONFIG.get('ssl_verify_cert', True)
-            conn_kwargs['ssl_verify_identity'] = DB_CONFIG.get('ssl_verify_identity', False)
+    conn_kwargs = {
+        'host': DB_CONFIG['host'],
+        'port': DB_CONFIG.get('port', 3306),
+        'user': DB_CONFIG['user'],
+        'password': DB_CONFIG['password'],
+        'database': DB_CONFIG['database'],
+    }
+    if DB_CONFIG.get('ssl_ca'):
+        conn_kwargs['ssl_ca'] = DB_CONFIG['ssl_ca']
+        conn_kwargs['ssl_verify_cert'] = DB_CONFIG.get('ssl_verify_cert', True)
+        conn_kwargs['ssl_verify_identity'] = DB_CONFIG.get('ssl_verify_identity', False)
 
-        # Connect directly to the target database; managed hosts usually
-        # do not grant CREATE DATABASE privileges to application users.
-        conn = mysql.connector.connect(**conn_kwargs)
-        cursor = conn.cursor()
+    # Retry loop to wait for MySQL readiness in container environments
+    for attempt in range(1, max_retries + 1):
+        try:
+            print(f"Connecting to database (attempt {attempt}/{max_retries})...")
+            conn = mysql.connector.connect(**conn_kwargs)
+            cursor = conn.cursor()
+            print("Successfully connected to MySQL database.")
+            break
+        except mysql.connector.Error as err:
+            if attempt == max_retries:
+                print(f"ERROR: Failed to connect to MySQL after {max_retries} attempts: {err}")
+                sys.exit(1)
+            print(f"Database not ready yet ({err.msg if hasattr(err, 'msg') else err}). Retrying in {retry_delay}s...")
+            time.sleep(retry_delay)
+
+    try:
         
         # Create tables
         tables = [

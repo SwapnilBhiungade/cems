@@ -1,0 +1,71 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cems-alert-rules
+  namespace: monitoring
+  labels:
+    release: cems-monitoring
+    role: alert-rules
+spec:
+  groups:
+    - name: cems.application.rules
+      rules:
+        # Alert 1: Complete application outage
+        - alert: CEMSApplicationDown
+          expr: sum(up{namespace="cems", job="cems-service"}) == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "CEMS application is completely unreachable"
+            description: "No healthy pods found responding to Prometheus scrapes in namespace 'cems' for over 1 minute."
+
+        # Alert 2: High HTTP 5xx error rate
+        - alert: CEMSHigh5xxErrorRate
+          expr: (sum(rate(flask_http_request_total{status=~"5.."}[2m])) / sum(rate(flask_http_request_total[2m]))) * 100 > 5
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High HTTP 5xx error rate detected"
+            description: "CEMS is returning >5% internal server errors (5xx) over the past 2 minutes."
+
+        # Alert 3: Container restart spike (CrashLoop / Out-of-memory)
+        - alert: CEMSPodRestartSpike
+          expr: sum by (pod) (increase(kube_pod_container_status_restarts_total{namespace="cems"}[5m])) > 2
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod restart spike detected for {{ $labels.pod }}"
+            description: "Pod {{ $labels.pod }} restarted more than 2 times in 5 minutes."
+
+        # Alert 4: High CPU utilization
+        - alert: CEMSHighCpuUtilization
+          expr: sum(rate(container_cpu_usage_seconds_total{namespace="cems", container="cems-app"}[5m])) by (pod) / sum(kube_pod_container_resource_limits{namespace="cems", resource="cpu"}) by (pod) * 100 > 85
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage on pod {{ $labels.pod }}"
+            description: "Pod CPU usage is above 85% of limit for more than 5 minutes."
+
+        # Alert 5: High Memory utilization
+        - alert: CEMSHighMemoryUtilization
+          expr: sum(container_memory_working_set_bytes{namespace="cems", container="cems-app"}) by (pod) / sum(kube_pod_container_resource_limits{namespace="cems", resource="memory"}) by (pod) * 100 > 90
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Memory pressure warning on pod {{ $labels.pod }}"
+            description: "Pod memory working set is above 90% of limit. OOMKill risk imminent."
+
+        # Alert 6: HPA reaching maximum replicas
+        - alert: CEMSHpaMaxedOut
+          expr: kube_horizontalpodautoscaler_status_current_replicas{namespace="cems", horizontalpodautoscaler="cems-hpa"} == kube_horizontalpodautoscaler_spec_max_replicas{namespace="cems", horizontalpodautoscaler="cems-hpa"}
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "HPA has reached maximum allowed replicas"
+            description: "CEMS HPA has been at max replicas (8) for 10 minutes. Consider scaling node groups or optimizing code."
