@@ -20,7 +20,8 @@ COPY requirements.txt .
 
 # Build wheels in a wheels cache folder
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
+    pip wheel --no-cache-dir --wheel-dir /build/wheels -r requirements.txt
+
 
 
 # ----------------- Stage 2: Final Runtime -----------------
