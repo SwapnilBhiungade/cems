@@ -25,7 +25,7 @@ def run_smoke_tests(base_url):
         {"path": "/login", "expected_code": 200, "description": "User Login Interface"},
         {"path": "/register", "expected_code": 200, "description": "Student Registration Interface"},
         {"path": "/about", "expected_code": 200, "description": "About Information Page"},
-        {"path": "/static/css/styles.css", "expected_code": 200, "description": "Static Assets (CSS)"},
+        {"path": "/static/css/style.css", "expected_code": 200, "description": "Static Assets (CSS)"},
     ]
 
     all_passed = True
