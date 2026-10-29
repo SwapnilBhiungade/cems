@@ -9,7 +9,7 @@ metadata:
 data:
   # Mode A (In-cluster MySQL): mysql-service.cems.svc.cluster.local
   # Mode B (AWS RDS): cems-mysql-db.xxxxxxxxx.ap-south-1.rds.amazonaws.com
-  DB_HOST: "cems-mysql-db.xxxxxxxxx.ap-south-1.rds.amazonaws.com"
+  DB_HOST: "cems-mysql-db.cpmsmgy26adz.ap-south-1.rds.amazonaws.com"
   DB_PORT: "3306"
   DB_NAME: "campus_events"
   DB_USER: "cems_admin"
